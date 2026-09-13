@@ -1,8 +1,10 @@
 .git
+.env
 .venv
 __pycache__
 *.pyc
 .pytest_cache
+*.egg-info
 tests
 harness
 rlm-scaffold.zip

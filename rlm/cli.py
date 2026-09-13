@@ -19,13 +19,38 @@ from .rlm import DEFAULT_ROOT_MODEL, DEFAULT_SUB_MODEL, RLM
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="rlm", description="Recursive Language Model over a long context.")
-    p.add_argument("--context", required=True, help="path to the (potentially huge) text file")
-    p.add_argument("--query", required=True, help="the question to answer about the context")
-    p.add_argument("--root-model", default=DEFAULT_ROOT_MODEL)
-    p.add_argument("--sub-model", default=DEFAULT_SUB_MODEL)
-    p.add_argument("--max-turns", type=int, default=20)
-    p.add_argument("--quiet", action="store_true", help="print only the final answer")
+    p = argparse.ArgumentParser(
+        prog="rlm",
+        description="Recursive Language Model over a long context."
+    )
+    p.add_argument(
+        "--context",
+        required=True,
+        help="path to the (potentially huge) text file"
+    )
+    p.add_argument(
+        "--query",
+        required=True,
+        help="the question to answer about the context"
+    )
+    p.add_argument(
+        "--root-model",
+        default=DEFAULT_ROOT_MODEL
+    )
+    p.add_argument(
+        "--sub-model",
+        default=DEFAULT_SUB_MODEL
+    )
+    p.add_argument(
+        "--max-turns",
+        type=int,
+        default=20
+    )
+    p.add_argument(
+        "--quiet",
+        action="store_true",
+        help="print only the final answer"
+    )
     args = p.parse_args(argv)
 
     if not os.environ.get("ANTHROPIC_API_KEY"):

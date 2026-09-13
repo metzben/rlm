@@ -20,7 +20,7 @@ description: >-
   Recursive Language Model (Zhang, Kraska & Khattab, arXiv:2512.24601) —
   root LM + Python REPL kernel with recursive sub-calls, fully sandboxed,
   Anthropic credential injected by the host proxy.
-sourceURL: https://github.com/alexzhang13/rlm
+sourceURL: https://github.com/metzben/rlm
 licenses:
   - MIT
 
