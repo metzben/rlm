@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "rlm-sandbox"
 version = "0.1.0"
 description = "Recursive Language Model (RLM) harness that runs inside a Docker Sandbox"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = ["anthropic>=0.40"]
 
 [project.optional-dependencies]

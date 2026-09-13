@@ -35,7 +35,7 @@ RLM_ARGS     ?=
 
 PY           ?= python3
 
-.PHONY: help venv test build push kit-validate secret run shell rm status local-run clean need-registry
+.PHONY: help venv test build push kit-validate diagnose secret run shell rm status local-run clean need-registry
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -69,6 +69,9 @@ push: need-registry ## push the image so the sandbox's private Docker engine can
 
 kit-validate: ## validate kit/spec.yaml against the sbx schema
 	sbx kit validate $(KIT_DIR)
+
+diagnose: ## health-check the sbx installation (daemon, auth, virtualization)
+	sbx diagnose
 
 secret: ## store the Anthropic API key in the host keychain (prompts; never touches the VM)
 	sbx secret set anthropic

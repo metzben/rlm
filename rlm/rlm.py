@@ -4,9 +4,9 @@ rlm.py — Recursive Language Model (RLM) orchestrator.
 Implements the inference loop from Zhang, Kraska & Khattab, "Recursive
 Language Models" (arXiv:2512.24601), Algorithm 1:
 
-    state <- InitREPL(prompt=P)               # context lives in a REPL variable
-    state <- AddFunction(state, sub_RLM)      # llm_call() available in the REPL
-    hist  <- [Metadata(state)]               # root LM sees only length, not content
+    state <- InitREPL(prompt=P)          # context lives in a REPL variable
+    state <- AddFunction(state, sub_RLM) # llm_call() available in the REPL
+    hist  <- [Metadata(state)]           # root LM sees only length not content
     loop:
         code            <- LLM(hist)         # root LM writes code
         (state, stdout) <- REPL(state, code) # executed in the persistent kernel
@@ -186,7 +186,8 @@ class RLM:
                 "role": "user",
                 "content": (
                     f"Query: {query}\n\n"
-                    f"`context` is loaded in your REPL ({len(context):,} characters). "
+                    f"`context` is loaded in your REPL ({
+                        len(context):,} characters). "
                     f"Start by inspecting its structure."
                 ),
             }]
