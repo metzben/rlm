@@ -1,0 +1,19 @@
+{
+	"rlm_base": {
+		"desc": "Primary coding agent for rlm",
+		"filepath": "~/python/rlm",
+		"harnessName": "claude",
+		"modelName": "claude-fable-5",
+		"thinking": "high",
+		"mode": "auto-mode-on",
+		"docker": "no"
+	},
+	"rlm_reviewer": {
+		"desc": "Code review agent for rlm",
+		"filepath": "~/python/rlm",
+		"harnessName": "pi",
+		"modelName": "openai-codex/gpt-5.6-sol",
+		"thinking": "high",
+		"docker": "no"
+	}
+}

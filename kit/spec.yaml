@@ -1,0 +1,71 @@
+# Docker Sandboxes kit for the RLM harness (schema v2).
+#
+# What this buys you:
+#   * The whole harness (root-model loop + REPL kernel) runs inside one microVM.
+#   * Egress is deny-by-default; only api.anthropic.com:443 is reachable.
+#   * ANTHROPIC_API_KEY inside the VM is the literal string "proxy-managed".
+#     The host-side proxy swaps the real key into the x-api-key header on
+#     outbound requests. Model-generated code running in the kernel can print
+#     os.environ all day and never see the real credential.
+#
+# The real key is stored host-side, never in the VM:   sbx secret set anthropic
+# Field reference: https://docs.docker.com/ai/sandboxes/customize/kit-reference/
+
+schemaVersion: "2"
+kind: sandbox
+name: rlm-harness
+version: "0.1.0"
+displayName: RLM Harness
+description: >-
+  Recursive Language Model (Zhang, Kraska & Khattab, arXiv:2512.24601) —
+  root LM + Python REPL kernel with recursive sub-calls, fully sandboxed,
+  Anthropic credential injected by the host proxy.
+sourceURL: https://github.com/alexzhang13/rlm
+licenses:
+  - MIT
+
+# Image is a kit argument so the Makefile can pass the tag it just built/pushed:
+#   sbx run --kit-arg image=docker.io/you/rlm-harness:0.1.0 ./kit WORKSPACE -- ...
+args:
+  image:
+    default: "docker.io/austerelabs/rlm-harness:0.1.0"
+    description: Image reference the sandbox's private Docker engine will pull.
+
+sandbox:
+  image: "${{ kit.args.image }}"
+  entrypoint: ["/home/agent/.venv/bin/rlm"]
+  command:
+    default: []          # args come from the CLI after `--`
+    interactive: ["--help"]
+  resources:
+    cpu: 2
+    memory: 4g
+
+permissions:
+  network:
+    allow:
+      - "api.anthropic.com:443"
+
+credentials:
+  - service: anthropic
+    description: >-
+      Anthropic API key, used by both the root model loop and the recursive
+      llm_call() sub-calls. Injected by the proxy; never enters the VM.
+    required: true
+    apiKey:
+      name: ANTHROPIC_API_KEY
+      proxyManaged: true
+      inject:
+        - domain: api.anthropic.com
+          header: x-api-key
+          format: "%s"
+
+environment:
+  variables:
+    RLM_IN_SANDBOX: "1"
+
+agentInstructions:
+  filename: AGENTS.md
+  content: |
+    This sandbox runs an RLM harness. Network egress is limited to
+    api.anthropic.com. The API key is proxy-managed and not readable here.

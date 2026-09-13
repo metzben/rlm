@@ -1,0 +1,580 @@
+<title>RLM Sandbox Harness</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;600;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
+<style>
+  :root {
+    --ground: #F5F7F6;
+    --surface: #FFFFFF;
+    --ink: #1F2624;
+    --ink-soft: #5A6663;
+    --line: #D9DFDC;
+    --line-soft: #E7ECE9;
+    --amber: #B07C26;
+    --amber-soft: #F4EAD5;
+    --teal: #3E6B69;
+    --teal-soft: #E2ECEB;
+    --code-bg: #EDF1EF;
+    --mono: "Martian Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #15191A;
+      --surface: #1D2325;
+      --ink: #E3E7E5;
+      --ink-soft: #98A5A1;
+      --line: #333C3E;
+      --line-soft: #272F31;
+      --amber: #D9A441;
+      --amber-soft: #33290F;
+      --teal: #6FA8A5;
+      --teal-soft: #1C2E2D;
+      --code-bg: #232B2D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #15191A;
+    --surface: #1D2325;
+    --ink: #E3E7E5;
+    --ink-soft: #98A5A1;
+    --line: #333C3E;
+    --line-soft: #272F31;
+    --amber: #D9A441;
+    --amber-soft: #33290F;
+    --teal: #6FA8A5;
+    --teal-soft: #1C2E2D;
+    --code-bg: #232B2D;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17.5px;
+    line-height: 1.65;
+    margin: 0;
+    padding-inline: clamp(16px, 5vw, 40px);
+    padding-block: 0 96px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  .prose { max-width: 68ch; }
+
+  header.masthead {
+    padding-block: 56px 40px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 8px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-weight: 800;
+    font-size: clamp(26px, 5vw, 42px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: clamp(18px, 2.4vw, 21px);
+    line-height: 1.55;
+    max-width: 62ch;
+    margin: 0 0 20px;
+    color: var(--ink);
+  }
+  .masthead-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+  .masthead-meta a { color: var(--ink-soft); }
+
+  nav.toc {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    padding-block: 18px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  nav.toc a { color: var(--ink-soft); text-decoration: none; }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--amber); text-decoration: underline; }
+
+  section { padding-block: 44px 8px; }
+  section + section { border-top: 1px solid var(--line-soft); margin-top: 36px; }
+  h2 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 21px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin: 6px 0 20px;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 14.5px;
+    margin: 34px 0 10px;
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--amber); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.78em;
+    font-weight: 400;
+    background: var(--code-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line-soft);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 18px 0 22px;
+    max-width: 100%;
+  }
+  pre code { background: none; padding: 0; font-size: 12.5px; line-height: 1.7; }
+  .cmt { color: var(--ink-soft); }
+  .amber-t { color: var(--amber); }
+
+  figure {
+    margin: 28px 0 30px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 18px 14px;
+    overflow-x: auto;
+  }
+  figure svg { display: block; max-width: 100%; height: auto; min-width: 620px; margin: 0 auto; }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-top: 14px;
+    max-width: 72ch;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 18px 0 24px;
+    font-size: 15.5px;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--ink-soft);
+    padding: 8px 14px 8px 0;
+    border-bottom: 2px solid var(--ink);
+  }
+  td {
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  td:first-child code { white-space: nowrap; }
+  .tablewrap { overflow-x: auto; }
+
+  ol.turns { counter-reset: turn; list-style: none; margin: 20px 0 24px; padding: 0; display: grid; gap: 14px; }
+  ol.turns li {
+    counter-increment: turn;
+    position: relative;
+    padding-left: 52px;
+    max-width: 66ch;
+  }
+  ol.turns li::before {
+    content: counter(turn);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid var(--amber);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+  ul { margin: 0 0 16px; padding-left: 22px; }
+  ul li { margin-bottom: 8px; }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0 24px; }
+  .duo > div {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    background: var(--surface);
+  }
+  .duo h3 { margin-top: 0; }
+  .duo .get h3 { color: var(--teal); }
+  .duo .not h3 { color: var(--amber); }
+  .duo ul { margin-bottom: 0; font-size: 15.5px; }
+  @media (max-width: 640px) { .duo { grid-template-columns: 1fr; } }
+
+  .callout {
+    border-left: 3px solid var(--amber);
+    background: var(--amber-soft);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 20px 0 24px;
+    max-width: 66ch;
+    font-size: 16px;
+  }
+  .callout p { margin: 0; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.8;
+  }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">System documentation</p>
+  <h1>RLM Sandbox Harness</h1>
+  <p class="standfirst">A Recursive Language Model that answers questions about inputs far larger than a context window — running entirely inside a hardware-isolated microVM that never sees the API key paying for it.</p>
+  <div class="masthead-meta">
+    <span>rlm-sandbox&nbsp;0.1.0</span>
+    <span>Paper: Zhang, Kraska &amp; Khattab, <a href="https://arxiv.org/abs/2512.24601">arXiv:2512.24601</a></span>
+    <span>Runtime: Docker&nbsp;Sandboxes (sbx)</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <a href="#idea">The idea</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#loop">One query, turn by turn</a>
+  <a href="#components">The components</a>
+  <a href="#security">Where the key lives</a>
+  <a href="#kit">The sandbox kit</a>
+  <a href="#running">Running it</a>
+  <a href="#fieldnotes">Field notes</a>
+</nav>
+
+<section id="idea">
+  <p class="eyebrow">Concept</p>
+  <h2>The idea: don't read the context — <em>compute</em> over it</h2>
+  <div class="prose">
+    <p>A language model with a 1M-token window still can't answer a question about a 50M-character log file — and even inputs that <em>fit</em> degrade the model's attention when most of the content is irrelevant. The Recursive Language Model (RLM) inverts the arrangement: instead of putting the context <em>into</em> the model, it puts the context <em>next to</em> the model, as a plain Python variable named <code>context</code> inside a persistent REPL.</p>
+    <p>The <strong>root model</strong> never sees the full input. It sees only metadata — <em>"<code>context</code> is loaded, 19,351 characters"</em> — and it interacts with the data exclusively by writing Python code. It can <code>print(context[:2000])</code> to learn the structure, run regexes to count things exactly, or split the input into chunks and call <code>llm_call(chunk)</code> — a smaller, cheaper <strong>sub-model</strong> — to map a semantic question over each piece. Whatever the code prints comes back to the root model, truncated to a fixed size, so the conversation history stays small no matter how large the input is.</p>
+    <p>Termination is equally literal: the root model finishes by assigning its answer to a REPL variable named <code>Final</code>. The harness probes for that variable after every executed cell. There is no magic token or output format to parse — the answer is just program state.</p>
+    <p>The second half of this system is <em>containment</em>. The root model writes arbitrary code, and the harness executes it. That is the whole point — and also the reason the harness runs inside a <strong>Docker Sandbox</strong>: a microVM with its own kernel, deny-by-default networking, and an egress proxy that injects the real Anthropic API key into outbound requests <em>from the host side</em>, so the credential never exists inside the VM at all.</p>
+  </div>
+</section>
+
+<section id="architecture">
+  <p class="eyebrow">Architecture</p>
+  <h2>Two processes in a box, one key outside it</h2>
+  <div class="prose">
+    <p>Four parts matter. The <strong>orchestrator</strong> (<code>rlm.py</code>) runs the root-model loop. The <strong>kernel</strong> (<code>kernel.py</code>) is a real child process holding the Python namespace where <code>context</code>, <code>llm_call</code>, and eventually <code>Final</code> live. The <strong>REPL wrapper</strong> (<code>repl.py</code>) is the pipe between them. And the <strong>sandbox</strong> wraps all three, with the sbx proxy standing between the VM and the internet.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 860 400" role="img" aria-label="Architecture: inside the microVM, the rlm orchestrator drives the kernel over stdin/stdout pipes; both processes make HTTPS calls carrying the placeholder key 'proxy-managed' out to the sbx proxy on the host, which swaps in the real API key from the macOS Keychain and forwards to api.anthropic.com, the only allowed egress.">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+        <marker id="arrAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--amber)"/>
+        </marker>
+      </defs>
+
+      <!-- VM region -->
+      <rect x="16" y="40" width="380" height="340" rx="12" fill="var(--teal-soft)" stroke="var(--teal)" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="32" y="66" font-family="var(--mono)" font-size="11" font-weight="600" letter-spacing="1.5" fill="var(--teal)">MICROVM · DOCKER SANDBOX</text>
+
+      <!-- orchestrator box -->
+      <rect x="44" y="92" width="324" height="72" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.3"/>
+      <text x="60" y="120" font-family="var(--mono)" font-size="13" font-weight="600" fill="currentColor">rlm.py — orchestrator</text>
+      <text x="60" y="142" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">root-model loop · Algorithm 1</text>
+
+      <!-- kernel box -->
+      <rect x="44" y="248" width="324" height="72" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.3"/>
+      <text x="60" y="276" font-family="var(--mono)" font-size="13" font-weight="600" fill="currentColor">kernel.py — REPL subprocess</text>
+      <text x="60" y="298" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">holds context · llm_call() · Final</text>
+
+      <!-- pipes between them: labels centered between the two lines -->
+      <line x1="120" y1="164" x2="120" y2="244" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <line x1="320" y1="248" x2="320" y2="168" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="220" y="198" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">code cells (stdin)</text>
+      <text x="220" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">stdout + sentinel</text>
+      <text x="32" y="356" font-family="var(--mono)" font-size="10.5" fill="var(--teal)">ANTHROPIC_API_KEY = "proxy-managed"</text>
+
+      <!-- HTTPS elbow arrows out of VM into proxy -->
+      <path d="M 368 128 H 480 V 196 H 586" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <path d="M 368 284 H 480 V 236 H 586" fill="none" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="478" y="112" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">root model calls</text>
+      <text x="478" y="304" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">llm_call() sub-calls</text>
+      <text x="478" y="342" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">all other egress:</text>
+      <text x="478" y="358" text-anchor="middle" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">denied by default</text>
+
+      <!-- HOST region -->
+      <rect x="560" y="40" width="280" height="340" rx="12" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="576" y="66" font-family="var(--mono)" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor">HOST · MACOS</text>
+
+      <!-- keychain -->
+      <rect x="592" y="84" width="216" height="58" rx="8" fill="var(--amber-soft)" stroke="var(--amber)" stroke-width="1.5"/>
+      <text x="610" y="109" font-family="var(--mono)" font-size="12.5" font-weight="600" fill="var(--amber)">⌗ Keychain</text>
+      <text x="610" y="129" font-family="var(--mono)" font-size="10.5" fill="var(--amber)">real ANTHROPIC_API_KEY</text>
+
+      <!-- amber arrow keychain -> proxy -->
+      <line x1="700" y1="142" x2="700" y2="176" stroke="var(--amber)" stroke-width="1.8" marker-end="url(#arrAmber)"/>
+
+      <!-- proxy -->
+      <rect x="592" y="180" width="216" height="72" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.3"/>
+      <text x="610" y="208" font-family="var(--mono)" font-size="13" font-weight="600" fill="currentColor">sbx egress proxy</text>
+      <text x="610" y="230" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">rewrites x-api-key header</text>
+
+      <!-- amber arrow proxy -> api, label clear to the right of the line -->
+      <line x1="700" y1="252" x2="700" y2="300" stroke="var(--amber)" stroke-width="1.8" marker-end="url(#arrAmber)"/>
+      <text x="714" y="272" font-family="var(--mono)" font-size="10.5" fill="var(--amber)">real key</text>
+      <text x="714" y="288" font-family="var(--mono)" font-size="10.5" fill="var(--amber)">injected</text>
+
+      <!-- api box -->
+      <rect x="592" y="304" width="216" height="52" rx="8" fill="var(--surface)" stroke="var(--amber)" stroke-width="1.5"/>
+      <text x="610" y="334" font-family="var(--mono)" font-size="12.5" font-weight="600" fill="currentColor">api.anthropic.com:443</text>
+      <text x="610" y="372" font-family="var(--mono)" font-size="10.5" fill="var(--ink-soft)">the only allowed egress</text>
+    </svg>
+    <figcaption>Fig. 1 — Both processes inside the VM hold only the placeholder string <code>proxy-managed</code>. The amber path is the only place the real credential ever travels: Keychain → proxy → header rewrite on the way to api.anthropic.com.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>The crucial property is what the diagram <em>doesn't</em> contain: there is no arrow carrying the real key into the VM. Model-generated code can <code>print(os.environ)</code> all day and see only the literal string <code>proxy-managed</code>. The proxy terminates TLS (the VM trusts the proxy's CA, installed in the system store by the sandbox template), swaps the real key into the <code>x-api-key</code> header, and forwards the request — and it does this identically for the orchestrator's root-model calls and the kernel's recursive <code>llm_call()</code> traffic, because both go to the same domain.</p>
+  </div>
+</section>
+
+<section id="loop">
+  <p class="eyebrow">Mechanism</p>
+  <h2>One query, turn by turn</h2>
+  <div class="prose">
+    <p>This is Algorithm&nbsp;1 from the paper, as implemented in <code>RLM.complete()</code>. A real trace from this repo's smoke test appears on the right of each step.</p>
+  </div>
+
+  <ol class="turns">
+    <li><strong>Bootstrap.</strong> The harness spawns the kernel, writes the input to a temp file, and loads it inside the kernel as <code>context</code> — via a file, not a string literal, so quotes, backslashes, or NULs in the data can't break the cell. The same bootstrap defines <code>llm_call()</code> with its own Anthropic client. The root model is told only the length: <em>"<code>context</code> is loaded in your REPL (19,351 characters)."</em></li>
+    <li><strong>The root model writes code.</strong> Its reply must contain fenced <code>```python</code> blocks; the harness extracts and concatenates them. In the smoke test, turn one was simply <code>print(context[:2000])</code> — peek at the structure before deciding on a strategy.</li>
+    <li><strong>The kernel executes the cell.</strong> The code runs against the persistent namespace, so variables accumulate across turns like a notebook. Stdout and stderr — including full tracebacks — are captured and returned. An exception is not fatal; the root model sees the traceback and adjusts.</li>
+    <li><strong>The probe.</strong> After every cell, the harness runs a hidden probe asking the kernel, in JSON, whether <code>Final</code> exists. Not set → the captured output, truncated to 4,000 characters, is appended to the conversation and the loop continues (up to 20 turns).</li>
+    <li><strong>Termination.</strong> The root model assigns <code>Final = "…"</code>. The probe sees it, the loop returns the value, the kernel is torn down. In the smoke test this took three cells: peek, <code>Counter(re.findall(...))</code>, assign — an exact answer over data the model never "read."</li>
+  </ol>
+
+  <div class="prose">
+    <p>A reply with no code block gets a nudge (<em>"write code, or assign <code>Final</code>"</em>) rather than an error — a cheap recovery that showed up in the very first live run. And because the probe checks <em>state</em> rather than parsing model text for a magic tag, false terminations are structurally impossible: the loop ends exactly when the variable exists.</p>
+    <p>Recursion depth here is 1, the paper's default: <code>llm_call()</code> is a plain sub-model call, not a nested RLM. Depth&nbsp;&gt;&nbsp;1 — a sub-call that spawns its own kernel — is a contained change to the bootstrap code, which is an overridable field (<code>subcall_bootstrap</code>) precisely so tests can stub it out and future work can swap it.</p>
+  </div>
+</section>
+
+<section id="components">
+  <p class="eyebrow">Code tour</p>
+  <h2>The components, and why each exists</h2>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>File</th><th>What it is</th><th>Why it's shaped this way</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>rlm/rlm.py</code></td>
+        <td>The orchestrator: system prompt, root-model calls, code extraction, the turn loop, the <code>Final</code> probe.</td>
+        <td>Takes an <code>anthropic.Anthropic</code> client as a constructor argument rather than creating one — so tests inject a mock and the whole loop runs offline against a <em>real</em> kernel with <em>fake</em> models.</td>
+      </tr>
+      <tr>
+        <td><code>rlm/kernel.py</code></td>
+        <td>A ~50-line stateful REPL: read code from stdin until a sentinel line, <code>exec()</code> it against a persistent dict, print captured output, print the sentinel, repeat.</td>
+        <td>Deliberately minimal — no IPC framework, no jupyter. A line-oriented sentinel protocol (<code>___END_OF_EXEC___</code>) over plain pipes is easy to reason about and easy to sandbox. It catches <code>BaseException</code>, so even model code calling <code>sys.exit()</code> just produces a traceback instead of killing the kernel.</td>
+      </tr>
+      <tr>
+        <td><code>rlm/repl.py</code></td>
+        <td><code>SubprocessREPL</code>: spawns the kernel, writes cells, reads until the sentinel. Also home of <code>kernel_env()</code>.</td>
+        <td>This is the <em>only</em> place the kernel's environment is defined. The child gets an explicit allow-list, never the parent's full environment — hygiene for model-run code, and the single spot where the proxy variables that <em>must</em> be forwarded are enumerated.</td>
+      </tr>
+      <tr>
+        <td><code>rlm/cli.py</code></td>
+        <td><code>rlm --context FILE --query "…"</code> — argument parsing, file reading, exit codes.</td>
+        <td>Doubles as the sandbox kit's entrypoint. The workspace is mounted at the same absolute path inside the VM as on the host, so a host path passed to <code>--context</code> works unchanged inside.</td>
+      </tr>
+      <tr>
+        <td><code>kit/spec.yaml</code></td>
+        <td>The Docker Sandboxes kit: image, entrypoint, resources, network allow-list, credential declaration.</td>
+        <td>Declarative security boundary — see <a href="#kit">the sandbox kit</a>.</td>
+      </tr>
+      <tr>
+        <td><code>Dockerfile</code></td>
+        <td>Sandbox image: the <code>shell-docker</code> template + Python + this package in a venv.</td>
+        <td>The template provides what kits require (an <code>agent</code> user, proxy-env plumbing, the proxy CA in the system store). Two env vars point Python's HTTP stack at that system CA store — without them, <code>httpx</code> would use certifi's bundle and reject the proxy's TLS interception. Crucially it sets <strong>no ENTRYPOINT</strong> (see <a href="#fieldnotes">field notes</a>).</td>
+      </tr>
+      <tr>
+        <td><code>tests/test_rlm.py</code></td>
+        <td>Nine offline tests: real kernel subprocess, mocked models.</td>
+        <td>They pin the behaviors that matter: <code>Final</code> terminates, sub-calls round-trip, output truncates, exceptions surface, secrets don't leak into the kernel env, proxy vars <em>do</em>.</td>
+      </tr>
+      <tr>
+        <td><code>Makefile</code></td>
+        <td>The operator's interface: venv, tests, image build/push, secret setup, sandbox runs.</td>
+        <td>Docker Sandboxes' CLI surface is still moving; keeping every <code>sbx</code> invocation in one file means one place to fix when a flag changes.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="security">
+  <p class="eyebrow">Security model</p>
+  <h2>Where the key lives — and where it can't reach</h2>
+
+  <div class="prose">
+    <p>The threat model is specific: <em>the root model writes arbitrary code, and this harness executes it.</em> Prompt-injected context, a jailbroken model, or an honest mistake all reduce to the same thing — untrusted Python running with network access. The design answers with three nested layers:</p>
+  </div>
+
+  <div class="duo">
+    <div class="get">
+      <h3>What the sandbox gives you</h3>
+      <ul>
+        <li><strong>Hypervisor isolation</strong> — the harness runs on its own kernel in a microVM, not in a shared-kernel container on the host.</li>
+        <li><strong>Deny-by-default egress</strong> — the global policy denies everything; the kit allows exactly <code>api.anthropic.com:443</code>. Exfiltration has nowhere to go.</li>
+        <li><strong>Proxy-managed credentials</strong> — the real key stays in the macOS Keychain. Both VM processes see the placeholder <code>proxy-managed</code>; the host proxy injects the real header on the way out.</li>
+      </ul>
+    </div>
+    <div class="not">
+      <h3>What it deliberately doesn't</h3>
+      <ul>
+        <li><strong>No isolation <em>between</em> the two VM processes.</strong> Orchestrator and kernel share a filesystem and network namespace. Acceptable here because the one secret worth stealing isn't in the VM to steal.</li>
+        <li><strong><code>make local-run</code> is trusted-input only.</strong> Outside the sandbox the key is real and <em>does</em> reach the kernel — it has to, for <code>llm_call</code>. Development convenience, not a safe mode.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>Even inside the VM, the kernel doesn't inherit the orchestrator's environment. <code>kernel_env()</code> builds an explicit allow-list — the necessities, the proxy plumbing, and the credential variable that is, by design, worthless in there:</p>
+  </div>
+
+<pre><code><span class="cmt"># repl.py — the kernel's entire environment, enumerated</span>
+PATH  HOME  LANG  LC_ALL  TMPDIR          <span class="cmt"># basics</span>
+HTTP_PROXY  HTTPS_PROXY  NO_PROXY  (+lowercase)  <span class="cmt"># route llm_call via the proxy</span>
+SSL_CERT_FILE  REQUESTS_CA_BUNDLE          <span class="cmt"># trust the proxy's TLS interception</span>
+ANTHROPIC_API_KEY  ANTHROPIC_BASE_URL      <span class="cmt"># inside the VM: "proxy-managed"</span></code></pre>
+
+  <div class="prose">
+    <p>Two tests keep this honest: one plants <code>SUPER_SECRET_TOKEN</code> in the parent environment and asserts the kernel can't see it; another asserts <code>HTTPS_PROXY</code> <em>does</em> arrive. The allow-list can't silently rot in either direction.</p>
+  </div>
+
+  <div class="callout">
+    <p><strong>Verified live:</strong> during the first sandboxed runs, both API paths worked while the VM held only the placeholder — the root loop answered an exact counting query via regex, and a second run exercised <code>llm_call()</code> fan-out through the proxy. The key never left the host.</p>
+  </div>
+</section>
+
+<section id="kit">
+  <p class="eyebrow">Configuration</p>
+  <h2>The sandbox kit: the boundary, declared</h2>
+  <div class="prose">
+    <p><code>kit/spec.yaml</code> (schema v2) is where the security story stops being convention and becomes configuration the runtime enforces. Three stanzas do the work:</p>
+  </div>
+
+<pre><code><span class="cmt"># the image is a kit argument, so the Makefile passes the tag it just pushed</span>
+sandbox:
+  image: <span class="amber-t">"${{ kit.args.image }}"</span>
+  entrypoint: ["/home/agent/.venv/bin/rlm"]   <span class="cmt"># launched INSIDE the running container</span>
+
+permissions:
+  network:
+    allow:
+      - <span class="amber-t">"api.anthropic.com:443"</span>              <span class="cmt"># the entire allow-list</span>
+
+credentials:
+  - service: anthropic
+    required: true
+    apiKey:
+      name: ANTHROPIC_API_KEY
+      <span class="amber-t">proxyManaged: true</span>                    <span class="cmt"># VM sees a placeholder, never the key</span>
+      inject:
+        - domain: api.anthropic.com
+          header: x-api-key</code></pre>
+
+  <div class="prose">
+    <p>The credential references a <em>service name</em> (<code>anthropic</code>), not a value. The value is stored once on the host with <code>sbx secret set anthropic</code> and bound to this kit on first run via an explicit approval prompt — the binding is remembered in the sbx config, so subsequent runs (including detached ones) need no interaction. <code>proxyManaged: true</code> is the single line that flips the whole credential model from "env var in the container" to "header rewrite at the proxy."</p>
+    <p>One operational consequence of the architecture: the sandbox VM runs its own private Docker engine, which pulls the kit image <em>itself</em>. A host-local image is invisible to it — the image must live in a registry the VM can reach (this project pushes to Docker Hub).</p>
+  </div>
+</section>
+
+<section id="running">
+  <p class="eyebrow">Operations</p>
+  <h2>Running it</h2>
+
+<pre><code><span class="cmt"># one-time setup</span>
+brew install docker/tap/sbx        <span class="cmt"># Docker Sandboxes CLI</span>
+sbx login                          <span class="cmt"># sandboxes require a Docker sign-in</span>
+sbx policy init deny-all           <span class="cmt"># global egress baseline; the kit allows on top</span>
+make secret                        <span class="cmt"># store the Anthropic key host-side (prompts)</span>
+make venv test                     <span class="cmt"># 9 offline tests — no API calls, no key needed</span>
+make build push                    <span class="cmt"># build the image, push so the VM can pull it</span>
+
+<span class="cmt"># the loop you actually use</span>
+make run CONTEXT=./big.log QUERY=<span class="amber-t">"How many distinct error codes appear?"</span>
+
+<span class="cmt"># housekeeping</span>
+make status                        <span class="cmt"># list sandboxes (sbx tui for a live dashboard)</span>
+make rm                            <span class="cmt"># delete the sandbox VM</span>
+make local-run CONTEXT=… QUERY=…   <span class="cmt"># DEV ONLY: no sandbox, real key reaches the kernel</span></code></pre>
+
+  <div class="prose">
+    <p>Useful knobs on the CLI: <code>--root-model</code> / <code>--sub-model</code> (defaults: Sonnet for the root, Haiku for sub-calls — the root model needs judgment, the mapped calls need volume), <code>--max-turns</code> (default 20), and <code>--quiet</code> to print only the final answer. Extra flags pass through <code>make run</code> via <code>RLM_ARGS="…"</code>.</p>
+  </div>
+</section>
+
+<section id="fieldnotes">
+  <p class="eyebrow">Hard-won specifics</p>
+  <h2>Field notes from the first live runs</h2>
+  <div class="prose">
+    <p>Docker Sandboxes and kits are experimental; these are the things that actually bit during bring-up, recorded so they don't bite twice.</p>
+    <ul>
+      <li><strong>Never set an <code>ENTRYPOINT</code> in the image.</strong> The sandbox runtime needs the template's own init (<code>tini</code>) as the container's main process: it keeps the container alive while the runtime injects a <code>start-agent</code> helper, which then launches the kit's declared entrypoint. Overriding the entrypoint with <code>rlm</code> made the container exit at birth — surfacing only as the cryptic <code>started hook: … container is not running</code>.</li>
+      <li><strong>The kit is a positional argument.</strong> <code>sbx run ./kit &lt;workspace&gt; -- &lt;args&gt;</code> — the <code>--kit</code> flag exists but means "mixin on a built-in agent," which is a different thing.</li>
+      <li><strong>Local images don't reach the VM.</strong> The sandbox's private engine pulls from registries only; a host-only tag fails with a bare <code>403</code>. Push first.</li>
+      <li><strong>The global network policy must be initialized once</strong> (<code>sbx policy init</code>) before any sandbox starts. <code>deny-all</code> is the baseline that matches this project's promise; per-kit allows layer on top.</li>
+      <li><strong>The credential binding is approved interactively, once.</strong> A non-interactive first run doesn't prompt — it warns and starts the sandbox <em>without</em> the credential. Do the first <code>make run</code> in a terminal you're watching.</li>
+      <li><strong>There is no <code>sbx logs</code>.</strong> Use <code>sbx ls</code> / <code>sbx tui</code>; the daemon's own log lives under <code>~/Library/Application Support/com.docker.sandboxes/…/daemon.log</code> and is where the real container-start errors surface.</li>
+      <li><strong>Exact counting belongs to code, semantic reading to sub-calls.</strong> In live runs, the root model's regex counted error codes perfectly; a forced <code>llm_call</code>-per-chunk strategy produced plausible but fuzzy counts. That division of labor is the RLM thesis in miniature — let the model choose code when precision matters.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div>rlm-sandbox 0.1.0 · MIT · Recursive Language Models: Zhang, Kraska &amp; Khattab, arXiv:2512.24601</div>
+  <div>Harness verified end-to-end 2026-09-12: keychain → proxy injection at both call sites · deny-all egress · Final-variable termination.</div>
+</footer>
+
+</div>

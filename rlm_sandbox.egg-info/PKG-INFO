@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: rlm-sandbox
+Version: 0.1.0
+Summary: Recursive Language Model (RLM) harness that runs inside a Docker Sandbox
+Requires-Python: >=3.10
+Requires-Dist: anthropic>=0.40
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"

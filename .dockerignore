@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+tests
+harness
+rlm-scaffold.zip
+rlm-sandbox.tar.gz
+rlm-harness-docs.html
+rlm-paper-2512.24601.pdf
