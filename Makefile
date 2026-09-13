@@ -35,7 +35,7 @@ RLM_ARGS     ?=
 
 PY           ?= python3
 
-.PHONY: help venv test build push kit-validate diagnose secret run shell rm status local-run clean need-registry
+.PHONY: help venv lint test build push kit-validate diagnose secret run shell rm status local-run clean need-registry
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -45,12 +45,11 @@ help:
 venv: ## create .venv and install the package in dev mode
 	$(PY) -m venv .venv && .venv/bin/pip install -q -e '.[dev]'
 
-test: ## run offline tests (real kernel subprocess, faked models)
-	.venv/bin/python -m pytest -q tests/
+lint: ## ruff check — pyflakes/pycodestyle defaults + the 79-char limit
+	.venv/bin/ruff check rlm/ tests/
 
-local-run: ## run OUTSIDE the sandbox with a real ANTHROPIC_API_KEY (dev only — key reaches the kernel)
-	@test -n "$(CONTEXT)" -a -n "$(QUERY)" || (echo "usage: make local-run CONTEXT=file QUERY='...'" && exit 2)
-	.venv/bin/rlm --context "$(CONTEXT)" --query "$(QUERY)" $(RLM_ARGS)
+test: lint ## run lint, then offline tests (real kernel, faked models)
+	.venv/bin/python -m pytest -q tests/
 
 # ---- image -------------------------------------------------------------------
 

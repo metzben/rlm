@@ -39,7 +39,10 @@ def main() -> None:
         code = "".join(lines)
         buf = io.StringIO()
         try:
-            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            with (
+                contextlib.redirect_stdout(buf),
+                contextlib.redirect_stderr(buf),
+            ):
                 exec(code, ns)
         except BaseException:  # noqa: BLE001 — include SystemExit/KeyboardInterrupt from model code
             traceback.print_exc(file=buf)

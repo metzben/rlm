@@ -56,6 +56,9 @@ hence `push`.
 make run CONTEXT=./logs/big.log QUERY="How many distinct error codes appear, and which is most common?"
 ```
 
+This may not be intuitive: the `--context` file must live under a workspace that was mounted into the microVM — that's the sandbox doing its job. Host files outside the mounted workspaces simply don't exist inside the VM, no matter what absolute path you give. Workspaces are declared as path arguments to `sbx run` (the Makefile mounts the project directory), they appear inside the VM at the same absolute path as on the host, and they're fixed at sandbox **creation** — re-running with the same `--name` reattaches to the old VM and ignores new mounts, so `make rm` first if you need to change them. To hand the RLM a file from elsewhere, either copy it into the workspace or mount its location as an additional (ideally read-only) workspace: `sbx run … ./kit ~/project ~/data:ro -- --context ~/data/big.log …`
+
+
 First run: `sbx` prompts you to approve the `anthropic` credential binding for
 this kit and its declared domain. Approve once; it's remembered (in
 `~/.config/sbx/credentials.yaml`). A **non-interactive** first run does not
@@ -63,6 +66,13 @@ prompt — it warns and starts the sandbox *without* the credential — so do th
 first run in a terminal you're watching. After that, unattended runs
 (`--detached`, CI) just work.
 
+The `make run` command above is basically wrapping the `sbx run` so its slightly easier. You could also add a shortcut to your .zshrc file that wraps it.
+
+```bash
+sbx run --kit-arg image=docker.io/austerelabs/rlm-harness:0.1.0 \
+    --name rlm ./kit ~/python/rlm \
+    -- --context ~/python/rlm/some.log --query "How many errors?"
+```
 ## Security model — what you get and what you don't
 
 You **do** get, from Docker Sandboxes:

@@ -9,8 +9,8 @@ Language Models" (arXiv:2512.24601), Algorithm 1:
     hist  <- [Metadata(state)]           # root LM sees only length not content
     loop:
         code            <- LLM(hist)         # root LM writes code
-        (state, stdout) <- REPL(state, code) # executed in the persistent kernel
-        hist            <- hist || code || Metadata(stdout)   # truncated stdout
+        (state, stdout) <- REPL(state, code) # run in the persistent kernel
+        hist            <- hist || code || Metadata(stdout) # truncated stdout
         if state[Final] is set: return state[Final]
 
 Design choices, and how they map to the sandbox:
@@ -44,7 +44,14 @@ from .repl import SubprocessREPL, kernel_env
 DEFAULT_ROOT_MODEL = "claude-sonnet-5"
 DEFAULT_SUB_MODEL = "claude-haiku-4-5-20251001"
 
-_CODE_RE = re.compile(r"```(?:python|py)?\s*\n(.*?)```", re.S)
+# Matches ANY fenced block (fences anchored to line starts), capturing the
+# language tag and body; extract_code() then keeps only python-ish blocks.
+# Matching every block keeps fence pairs consumed in document order, so a
+# foreign block's closing fence can't be mistaken for a python opener.
+_CODE_RE = re.compile(
+    r"^```[ \t]*(\w*)[ \t]*\n(.*?)^[ \t]*```[ \t]*$",
+    re.S | re.M,
+)
 
 SYSTEM_PROMPT = textwrap.dedent("""\
     You are the root model in a Recursive Language Model (RLM) system.
@@ -94,14 +101,19 @@ DEFAULT_SUBCALL_BOOTSTRAP = textwrap.dedent("""\
 
 _FINAL_PROBE = (
     "import json as _json\n"
-    "print(_json.dumps({'set': 'Final' in globals(), 'value': globals().get('Final')}, default=str))\n"
+    "print(_json.dumps({'set': 'Final' in globals(),"
+    " 'value': globals().get('Final')}, default=str))\n"
 )
 
 
 def extract_code(reply: str) -> Optional[str]:
     """All fenced python blocks in the reply, concatenated in order."""
-    blocks = _CODE_RE.findall(reply)
-    return "\n".join(b for b in blocks) if blocks else None
+    blocks = [
+        body
+        for tag, body in _CODE_RE.findall(reply)
+        if tag.lower() in ("", "py", "python", "python3")
+    ]
+    return "\n".join(blocks) if blocks else None
 
 
 def truncate(s: str, n: int) -> str:
@@ -142,10 +154,13 @@ class RLM:
 
     # ---- kernel setup -------------------------------------------------------
 
+    # this loads the REPL and seeds the context variable
     def _bootstrap(self, repl: SubprocessREPL, context: str) -> None:
         # The context goes through a temp file rather than a string literal so
         # arbitrary content (quotes, backslashes, NULs) can't break the cell.
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", delete=False, encoding="utf-8"
+        ) as f:
             f.write(context)
             context_path = f.name
 
@@ -179,7 +194,9 @@ class RLM:
 
     def complete(self, query: str, context: str) -> str:
         """Run the RLM loop and return the final answer string."""
-        with SubprocessREPL(env=kernel_env(extra=self.kernel_extra_env)) as repl:
+        with SubprocessREPL(
+            env=kernel_env(extra=self.kernel_extra_env)
+        ) as repl:
             self._bootstrap(repl, context)
 
             messages: list[dict] = [{
@@ -203,8 +220,9 @@ class RLM:
                     messages.append({
                         "role": "user",
                         "content": (
-                            "No ```python``` block found. Write code to keep working "
-                            "with `context`, or assign your answer to `Final`."
+                            "No ```python``` block found. Write code to "
+                            "keep working with `context`, or assign your "
+                            "answer to `Final`."
                         ),
                     })
                     continue
@@ -218,7 +236,8 @@ class RLM:
 
                 messages.append({
                     "role": "user",
-                    "content": "Execution output:\n" + truncate(output, self.max_output_chars),
+                    "content": "Execution output:\n"
+                    + truncate(output, self.max_output_chars),
                 })
 
         raise RuntimeError(f"no `Final` after {self.max_turns} turns")

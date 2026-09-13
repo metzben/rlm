@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-import os
 from unittest.mock import MagicMock
 
 import pytest
 
 from rlm.rlm import RLM, extract_code
 
-STUB_SUBCALL = "def llm_call(prompt, model=None):\n    return 'SUB<' + prompt[:12] + '>'\n"
+STUB_SUBCALL = (
+    "def llm_call(prompt, model=None):\n"
+    "    return 'SUB<' + prompt[:12] + '>'\n"
+)
 
 
 class _Block:
@@ -25,7 +27,11 @@ class _Resp:
 def _rlm(replies: list[str], **kw) -> tuple[RLM, MagicMock]:
     client = MagicMock()
     client.messages.create.side_effect = lambda **_: _Resp(replies.pop(0))
-    return RLM(client=client, verbose=False, subcall_bootstrap=STUB_SUBCALL, max_turns=6, **kw), client
+    rlm = RLM(
+        client=client, verbose=False, subcall_bootstrap=STUB_SUBCALL,
+        max_turns=6, **kw,
+    )
+    return rlm, client
 
 
 def test_final_variable_terminates():
@@ -33,13 +39,17 @@ def test_final_variable_terminates():
         "```python\nprint(len(context))\n```",
         "```python\nFinal = f'there are {context.count(\"fox\")} foxes'\n```",
     ])
-    assert rlm.complete("count foxes", "fox fox fox dog") == "there are 3 foxes"
+    answer = rlm.complete("count foxes", "fox fox fox dog")
+    assert answer == "there are 3 foxes"
     assert client.messages.create.call_count == 2
 
 
 def test_recursive_subcall_inside_kernel():
     rlm, _ = _rlm([
-        "```python\nparts = [llm_call(context[i:i+5]) for i in range(0, 10, 5)]\nFinal = '|'.join(parts)\n```",
+        "```python\n"
+        "parts = [llm_call(context[i:i+5]) for i in range(0, 10, 5)]\n"
+        "Final = '|'.join(parts)\n"
+        "```",
     ])
     assert rlm.complete("q", "abcdefghij") == "SUB<abcde>|SUB<fghij>"
 
@@ -51,10 +61,16 @@ def test_output_is_truncated_and_fed_back():
         seen["messages"] = kw["messages"]
         return _Resp(replies.pop(0))
 
-    replies = ["```python\nprint('x' * 10000)\n```", "```python\nFinal = 'ok'\n```"]
+    replies = [
+        "```python\nprint('x' * 10000)\n```",
+        "```python\nFinal = 'ok'\n```",
+    ]
     client = MagicMock()
     client.messages.create.side_effect = create
-    rlm = RLM(client=client, verbose=False, subcall_bootstrap=STUB_SUBCALL, max_output_chars=100)
+    rlm = RLM(
+        client=client, verbose=False, subcall_bootstrap=STUB_SUBCALL,
+        max_output_chars=100,
+    )
     assert rlm.complete("q", "ctx") == "ok"
     fed_back = seen["messages"][-2]["content"]
     assert "truncated" in fed_back and len(fed_back) < 300
@@ -89,17 +105,44 @@ def test_gives_up_after_max_turns():
 def test_kernel_does_not_inherit_arbitrary_env(monkeypatch):
     monkeypatch.setenv("SUPER_SECRET_TOKEN", "leak-me")
     rlm, _ = _rlm([
-        "```python\nimport os\nFinal = os.environ.get('SUPER_SECRET_TOKEN', 'absent')\n```",
+        "```python\nimport os\n"
+        "Final = os.environ.get('SUPER_SECRET_TOKEN', 'absent')\n```",
     ])
     assert rlm.complete("q", "ctx") == "absent"
 
 
 def test_proxy_vars_do_reach_kernel(monkeypatch):
     monkeypatch.setenv("HTTPS_PROXY", "http://sandbox-proxy:3128")
-    rlm, _ = _rlm(["```python\nimport os\nFinal = os.environ['HTTPS_PROXY']\n```"])
+    rlm, _ = _rlm([
+        "```python\nimport os\nFinal = os.environ['HTTPS_PROXY']\n```",
+    ])
     assert rlm.complete("q", "ctx") == "http://sandbox-proxy:3128"
 
 
 def test_extract_code_joins_multiple_blocks():
     reply = "first\n```python\na = 1\n```\nthen\n```py\nb = 2\n```"
     assert extract_code(reply) == "a = 1\n\nb = 2\n"
+
+
+def test_extract_code_skips_foreign_blocks_without_mispairing():
+    # A non-python block's CLOSING fence must not be taken as an opener —
+    # the prose after it is not code.
+    reply = (
+        "```bash\necho hi\n```\n"
+        "Now some prose.\n"
+        "```python\nx = 1\n```"
+    )
+    assert extract_code(reply) == "x = 1\n"
+
+
+def test_extract_code_tolerates_tag_variants():
+    assert extract_code("```Python3\na = 1\n```") == "a = 1\n"
+
+
+def test_extract_code_foreign_only_is_none():
+    assert extract_code("```json\n{}\n```") is None
+
+
+def test_extract_code_ignores_midline_backticks():
+    reply = "```python\ns = '```'\nb = 2\n```"
+    assert extract_code(reply) == "s = '```'\nb = 2\n"

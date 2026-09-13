@@ -23,7 +23,9 @@ import sys
 from typing import Iterable, Optional
 
 SENTINEL = "___END_OF_EXEC___"
-_KERNEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kernel.py")
+_KERNEL_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "kernel.py"
+)
 
 # Variables the kernel needs to function and to reach the sandbox proxy.
 _PASSTHROUGH_VARS: tuple[str, ...] = (
@@ -50,7 +52,10 @@ _PASSTHROUGH_VARS: tuple[str, ...] = (
 )
 
 
-def kernel_env(extra: Optional[dict] = None, passthrough: Iterable[str] = _PASSTHROUGH_VARS) -> dict:
+def kernel_env(
+    extra: Optional[dict] = None,
+    passthrough: Iterable[str] = _PASSTHROUGH_VARS,
+) -> dict:
     env = {k: os.environ[k] for k in passthrough if k in os.environ}
     env.setdefault("PYTHONUNBUFFERED", "1")
     if extra:
@@ -59,12 +64,16 @@ def kernel_env(extra: Optional[dict] = None, passthrough: Iterable[str] = _PASST
 
 
 class SubprocessREPL:
-    def __init__(self, env: Optional[dict] = None, python_executable: str = sys.executable):
+    def __init__(
+        self,
+        env: Optional[dict] = None,
+        python_executable: str = sys.executable,
+    ):
         self._proc = subprocess.Popen(
             [python_executable, "-u", _KERNEL_PATH],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=sys.stderr,  # kernel-crash diagnostics only, not cell output
+            stderr=sys.stderr,  # kernel-crash diagnostics, not cell output
             text=True,
             bufsize=1,
             env=env if env is not None else kernel_env(),
@@ -86,7 +95,9 @@ class SubprocessREPL:
         while True:
             line = self._proc.stdout.readline()
             if line == "":
-                raise RuntimeError("REPL subprocess closed stdout unexpectedly")
+                raise RuntimeError(
+                    "REPL subprocess closed stdout unexpectedly"
+                )
             if line.rstrip("\n") == SENTINEL:
                 break
             out_lines.append(line)
