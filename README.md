@@ -5,13 +5,14 @@ that runs entirely inside a Docker Sandbox microVM, with the Anthropic API key
 injected by the host-side proxy so it never enters the VM.
 
 ```
- host (macOS)                              │  sandbox microVM
- ─────────────────────────────────────────  │  ──────────────────────────────────────
+ host (macOS)                               │  sandbox microVM
+ ─────────────────────────────────────────  │  ────────────────────────────────────
  Keychain ── real ANTHROPIC_API_KEY         │  rlm (root-model loop)  ──┐
      │                                      │     └─ kernel.py (REPL)   ├─► HTTPS ─┐
  sbx proxy ◄────────────────────────────────┼──── ANTHROPIC_API_KEY=proxy-managed ◄┘
      │  rewrites x-api-key on the way out   │
-     └──► api.anthropic.com:443 (only allowed egress)
+     └──► api.anthropic.com:443             │
+          (only allowed egress)             │
 ```
 
 ## Layout
