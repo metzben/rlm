@@ -28,7 +28,9 @@ licenses:
 #   sbx run --kit-arg image=docker.io/you/rlm-harness:0.1.0 ./kit WORKSPACE -- ...
 args:
   image:
-    default: "docker.io/austerelabs/rlm-harness:0.1.0"
+    # Neutral placeholder — the Makefile always overrides this with the tag it
+    # built from your REGISTRY (env var, .env file, or make argument).
+    default: "docker.io/example/rlm-harness:0.1.0"
     description: Image reference the sandbox's private Docker engine will pull.
 
 sandbox:

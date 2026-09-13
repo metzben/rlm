@@ -1,0 +1,19 @@
+# local configuration (registry namespace, etc.)
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# local artifacts
+test-context.log
+rlm-scaffold.zip
+rlm-sandbox.tar.gz
+
+# local agent-fleet config (not part of the project)
+harness/

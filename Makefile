@@ -15,7 +15,12 @@
 
 SHELL := /bin/bash
 
-REGISTRY     ?= docker.io/austerelabs
+# REGISTRY is injectable and has no default. Set it one of three ways:
+#   * per invocation:  make build push REGISTRY=docker.io/<your-namespace>
+#   * environment:     export REGISTRY=docker.io/<your-namespace>
+#   * .env file:       echo 'REGISTRY=docker.io/<your-namespace>' > .env   (gitignored)
+-include .env
+REGISTRY     ?=
 IMAGE_NAME   ?= rlm-harness
 VERSION      ?= 0.1.0
 IMAGE        := $(REGISTRY)/$(IMAGE_NAME):$(VERSION)
@@ -30,7 +35,7 @@ RLM_ARGS     ?=
 
 PY           ?= python3
 
-.PHONY: help venv test build push kit-validate secret run shell rm status local-run clean
+.PHONY: help venv test build push kit-validate secret run shell rm status local-run clean need-registry
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -49,10 +54,15 @@ local-run: ## run OUTSIDE the sandbox with a real ANTHROPIC_API_KEY (dev only â€
 
 # ---- image -------------------------------------------------------------------
 
-build: ## build the sandbox image
+need-registry:
+	@test -n "$(REGISTRY)" || (echo "REGISTRY is not set â€” where should the image live?"; \
+	  echo "  make <target> REGISTRY=docker.io/<your-namespace>"; \
+	  echo "  or: echo 'REGISTRY=docker.io/<your-namespace>' > .env"; exit 2)
+
+build: need-registry ## build the sandbox image
 	docker build -t $(IMAGE) .
 
-push: ## push the image so the sandbox's private Docker engine can pull it
+push: need-registry ## push the image so the sandbox's private Docker engine can pull it
 	docker push $(IMAGE)
 
 # ---- sandbox -----------------------------------------------------------------
@@ -69,11 +79,11 @@ secret: ## store the Anthropic API key in the host keychain (prompts; never touc
 # arguments passed to the kit entrypoint (rlm).
 SBX_RUN = sbx run --kit-arg image=$(IMAGE) --name $(SANDBOX_NAME) $(KIT_DIR) $(WORKSPACE)
 
-run: ## run an RLM query inside the sandbox: make run CONTEXT=file QUERY='...'
+run: need-registry ## run an RLM query inside the sandbox: make run CONTEXT=file QUERY='...'
 	@test -n "$(CONTEXT)" -a -n "$(QUERY)" || (echo "usage: make run CONTEXT=file QUERY='...'" && exit 2)
 	$(SBX_RUN) -- --context "$(abspath $(CONTEXT))" --query "$(QUERY)" $(RLM_ARGS)
 
-shell: ## open the sandbox in interactive mode (entrypoint --help)
+shell: need-registry ## open the sandbox in interactive mode (entrypoint --help)
 	$(SBX_RUN)
 
 status: ## list sandboxes (there is no `sbx logs`; use `sbx tui` for a live dashboard)

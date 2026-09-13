@@ -38,8 +38,12 @@ sbx login                          # sandboxes require a Docker sign-in
 sbx policy init deny-all           # one-time global egress baseline; the kit's allow layers on top
 make venv test                     # offline tests
 make secret                        # `sbx secret set anthropic` → stored host-side (prompts for the key)
-make build push                    # REGISTRY defaults to docker.io/austerelabs; override REGISTRY=... to change
+cp .env.example .env               # then set REGISTRY=docker.io/<your-namespace>
+make build push                    # builds and pushes $REGISTRY/rlm-harness
 ```
+
+`REGISTRY` has no default — set it in `.env` (gitignored), the environment, or
+per invocation (`make build push REGISTRY=docker.io/<you>`).
 
 The sandbox runs its own private Docker engine and pulls the image itself.
 Host-local images are not visible to it (the pull fails with a bare `403`) —
