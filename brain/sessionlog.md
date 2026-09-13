@@ -1,0 +1,14 @@
+---
+type: Time Series Log
+title: Session Log
+description: A time series log that captures every agent session with an agent-created summary of what happened during the session.
+tags: [brain, sessionlog, timeseries]
+timestamp: 2026-09-13 12:25:32
+---
+
+---
+author: Claude Fable 5
+timestamp: 2026-09-13 12:25:32
+session: file:///Users/benjaminmetz/.claude/projects/-Users-benjaminmetz-python-rlm/a44c41df-4f05-48e7-8d15-6f584b69ae48.jsonl
+summary: "Smoke-tested the RLM sandbox harness end-to-end for the first time (Anthropic API key from macOS Keychain injected via sbx into the Docker sandbox), fixing a `make push` tag mismatch and making the Docker registry configurable via .env so the repo (now public at github.com/metzben/rlm) doesn't leak the austerelabs registry; kit/spec.yaml's sourceURL was updated to match. Untracked build artifacts (harness/, rlm_sandbox.egg-info, __pycache__, test-context.log) from git and hardened .dockerignore, committing and pushing as f8bb9f5 (the only commit actually pushed within this session). Wrote rlm-harness-docs.html, a full architecture writeup with a custom diagram of the sandbox/REPL/kernel/RLM data flow, iterated on the diagram (fixed overlapping text, straightened the host/sandbox dotted boundary), downloaded the original RLM paper into the repo, and cross-checked README.md against the new docs for accuracy. Did a python-version bump to latest, reformatted rlm.py and repl.py to 79-char lines, added a ruff config, improved the `_CODE_RE` markdown-code-fence regex in rlm.py with an added test, and added `sbx kit validate ./kit` and `sbx diagnose` targets to the Makefile — none of this later work was committed during the transcript, so it should be verified/committed in a follow-up session. Spent significant time walking the user through the codebase (SubprocessREPL, PYTHONUNBUFFERED, poll(), the Makefile's SBX_RUN, coding-harness code-extraction practices in general) since the user is learning the project. Explored two forward-looking design ideas at the user's request and wrote them up (without implementing) in a new gitignored ideas/ directory: ideas/claude-code-backend.md (running a `claude setup-token`-authenticated Claude Code instance inside the sandbox as an alternate backend, plus an appended idea about persisting the harness's session.jsonl into the REPL's map for the orchestrator to reference) and ideas/injected-toolkit.md (injecting real project functions into the IPython REPL at runtime as callable tools the LLM can invoke against the loaded context), alongside a tmux+PTY+ipython monitoring concept discussed but not written up. Session ended on good terms with no open blockers, though the uncommitted Python 3.13 bump, line-length reformatting, ruff config, and Makefile targets should be committed next."
+---

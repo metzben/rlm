@@ -17,3 +17,6 @@ rlm-sandbox.tar.gz
 
 # local agent-fleet config (not part of the project)
 harness/
+
+# private scratch space for ideas (untracked for now)
+ideas/
